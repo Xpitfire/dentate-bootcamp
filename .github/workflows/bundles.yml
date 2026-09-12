@@ -50,7 +50,12 @@ jobs:
           if [ "${{ matrix.target }}" != "macos-arm64" ]; then
             python -m pip install torch --index-url https://download.pytorch.org/whl/cpu   # CPU wheels: ~10x smaller than CUDA
           fi
-          python -m pip install "dentate[demo]==${{ steps.v.outputs.version }}"
+          # PyPI's CDN can lag a fresh upload by a few minutes; bounded retry instead of racing it.
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            python -m pip install --no-cache-dir "dentate[demo]==${{ steps.v.outputs.version }}" && break
+            [ "$attempt" = 10 ] && { echo "dentate ${{ steps.v.outputs.version }} not resolvable from PyPI after 10 attempts"; exit 1; }
+            echo "attempt $attempt: not on the index yet, retrying in 30s"; sleep 30
+          done
       - name: Build the one-folder bundle
         shell: bash
         run: pyinstaller --noconfirm --clean --distpath build/bundle packaging/pyinstaller/dentate.spec
