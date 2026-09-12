@@ -83,6 +83,7 @@ jobs:
           name: dentate-${{ matrix.target }}
           path: dentate-${{ matrix.target }}.zip
           if-no-files-found: error
+          retention-days: 2   # the zips live on the GitHub release; CI artifacts only bridge the jobs
 
   release:
     needs: bundle
