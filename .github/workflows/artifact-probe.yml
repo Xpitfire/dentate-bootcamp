@@ -1,0 +1,16 @@
+# 1 KB upload to check the account's Actions artifact quota before dispatching heavy matrix builds.
+name: artifact-probe
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: head -c 1024 /dev/urandom > probe.bin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact-probe
+          path: probe.bin
+          retention-days: 1
