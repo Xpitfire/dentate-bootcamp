@@ -78,8 +78,8 @@ $\ell_{it}=\min(\rho_{it}A_i,\ \operatorname{clip}(\rho_{it},1-\epsilon_\ell,1+\
 | `loss_aggregation` | `token` (default), `response` | `token`: $J=\sum_i\sum_t \ell_{it}\,/\,\sum_i T_i$ — the mean over all *retained* completion tokens (not Dr. GRPO's fixed maximum-length denominator); `response`: $J=\frac1N\sum_i\frac1{T_i}\sum_t \ell_{it}$. The k3 KL and the entropy bonus use the same aggregation, so the switch changes token weighting, not the KL scale. |
 | `advantage_normalization` | `mean` (default), `standardized` | `mean`: $A_i=R_i-\bar R$ (rewards 1,0,1,0 → ±0.5); `standardized`: $A_i=(R_i-\bar R)/(s_R+\varepsilon)$ with the population SD (→ ≈±1). |
 | `clip_low`, `clip_high` | 0.05..0.5 | the band $1-\epsilon_\ell<\rho<1+\epsilon_h$; defaults 0.2 / 0.28 (DAPO clip-higher). |
-| `algorithm` | `grpo` (default), `sao` | see below. |
-| `gae_lambda` | 0..1 | GAE λ for `sao` only. |
+| `algorithm` | `grpo` (default), `single_rollout` | see below. |
+| `gae_lambda` | 0..1 | GAE λ for `single_rollout` only. |
 
 `sao` is a **bounded, single-process embodiment of SAO's components** (Hou et al., arXiv:2607.07508), not the paper's
 asynchronous rollout/trainer infrastructure: one rollout per prompt over `samples × batch_size` prompts (the same
