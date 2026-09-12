@@ -72,6 +72,23 @@ papers) and the owner research dashboard, all in one process. Data root `--data`
 store at its root, lab state under `.bootcamp/`. It binds loopback only by design — for a network-facing site use
 `python -m dentate.bootcamp serve` behind OIDC (see the README). `dentate research-serve` is the old dashboard alone.
 
+**Terminal.** `dentate serve` also embeds a terminal dock at the bottom of the lab and research pages (toggle with
+the ⌃` / ⌘` shortcut or the strip's arrow; drag its top edge to resize). It is locked until you open the URL the
+server prints at start — `open http://127.0.0.1:8793/?token=…` — which carries a per-launch secret (like Jupyter's);
+opening it once stores the secret as an HttpOnly cookie and drops it from the address bar. Pass your own with
+`--terminal-token` or `DENTATE_TERMINAL_TOKEN`; the server also writes it 0600 to `<data>/.bootcamp/terminal-token`
+(the Colab notebook reads it from there). Each tab is a real shell running as you, in the data root, with `dentate`
+and `cortex` on `PATH` — the first line tells which of `cortex`, `codex`, `claude`, `omp` are installed and how to
+install the missing ones (nothing is installed for you). With a RunPod or Lambda API key in Settings → Integrations
+the new-tab dropdown also lists your instances (RunPod pods exposing SSH, active Lambda instances) and opens `ssh` to
+them; an instance that runs one of your experiments is preselected and badged. Tabs survive navigation and page
+reloads (the server keeps the shell and replays its scrollback) until you close them or stop the server. The dock
+exists only in this local mode — never on the hosted site — and every terminal request needs the launch cookie, a
+loopback or admitted `--proxy-host` Host, and the same Origin + CSRF checks as every other lab mutation. `--proxy-host`
+is for a proxy that authenticates you itself (Colab's port proxy); never a public tunnel, which would expose a shell
+as your user, and never a loopback name (refused). Windows needs WSL (`dentate serve` reports the terminal as
+unsupported there).
+
 **Downloadable CLI.** No Python? The release attaches self-contained one-folder bundles:
 [macOS arm64](https://github.com/Xpitfire/dentate-bootcamp/releases/latest/download/dentate-macos-arm64.zip) ·
 [Linux x64](https://github.com/Xpitfire/dentate-bootcamp/releases/latest/download/dentate-linux-x64.zip) ·
