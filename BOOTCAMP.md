@@ -103,8 +103,7 @@ Unzip, then `./dentate/dentate demo doctor` (Windows: `dentate\dentate.exe`). Sa
 `dentate serve` in the background → open it through Colab's port proxy. The notebook resolves the proxy hostname
 first and starts the server with `--proxy-host <that host>`, because the browser cannot reach the VM's
 `127.0.0.1:8793` and local mode answers only loopback plus explicitly admitted proxy hosts. Use the "open in a new
-tab" link to launch and publish experiments; the inline frame is a read-only preview (Colab embeds it cross-site, which
-blocks the session cookie). The CPU runtime is enough; expect a few minutes for the starter. Everything after the install is offline. The notebook also executes
+tab" link to launch and publish experiments; the site opens in its own tab (it refuses to be embedded). The CPU runtime is enough; expect a few minutes for the starter. Everything after the install is offline. The notebook also executes
 headless (`jupyter nbconvert --execute`) on plain Linux: the Colab calls are guarded, so it doubles as a smoke test.
 
 ## 3. Hosted — https://dentate.cortex.a2olabs.com
