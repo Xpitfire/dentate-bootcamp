@@ -1,0 +1,103 @@
+# CLI bundles for the bootcamp: one-folder PyInstaller builds of `dentate[demo]` installed from PyPI, one per OS,
+# attached to a GitHub release `v<version>` here so anonymous attendees can download them:
+#   https://github.com/Xpitfire/dentate-bootcamp/releases/latest/download/dentate-{macos-arm64,linux-x64,windows-x64}.zip
+# Trigger: push a tag `v<version>` or dispatch with the PyPI version to bundle. The target names are load-bearing:
+# the Dentate site and BOOTCAMP.md link them verbatim.
+name: bundles
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "dentate version on PyPI (e.g. 0.1.2)"
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  bundle:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: macos-arm64
+          - os: ubuntu-22.04
+            target: linux-x64
+          - os: windows-2022
+            target: windows-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - id: v
+        shell: bash
+        run: |
+          v="${{ github.event.inputs.version }}"; [ -n "$v" ] || v="${GITHUB_REF_NAME#v}"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+      - name: Install dentate[demo] from PyPI + PyInstaller
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip pyinstaller
+          if [ "${{ matrix.target }}" != "macos-arm64" ]; then
+            python -m pip install torch --index-url https://download.pytorch.org/whl/cpu   # CPU wheels: ~10x smaller than CUDA
+          fi
+          python -m pip install "dentate[demo]==${{ steps.v.outputs.version }}"
+      - name: Build the one-folder bundle
+        shell: bash
+        run: pyinstaller --noconfirm --clean --distpath build/bundle packaging/pyinstaller/dentate.spec
+      - name: Smoke the bundle (doctor + init, offline)
+        shell: bash
+        env:
+          HF_HUB_OFFLINE: "1"
+          TRANSFORMERS_OFFLINE: "1"
+          DENTATE_HOME: ${{ runner.temp }}/dentate-home
+        run: |
+          exe=build/bundle/dentate/dentate; [ -f "$exe.exe" ] && exe="$exe.exe"
+          "$exe" demo doctor
+          "$exe" demo init
+      - name: Zip
+        shell: bash
+        run: |
+          cd build/bundle
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            7z a -tzip "../../dentate-${{ matrix.target }}.zip" dentate
+          else
+            zip -qr -y "../../dentate-${{ matrix.target }}.zip" dentate
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dentate-${{ matrix.target }}
+          path: dentate-${{ matrix.target }}.zip
+          if-no-files-found: error
+
+  release:
+    needs: bundle
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - id: v
+        run: |
+          v="${{ github.event.inputs.version }}"; [ -n "$v" ] || v="${GITHUB_REF_NAME#v}"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+      - name: Attach the CLI bundles to release v${{ steps.v.outputs.version }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.v.outputs.version }}
+          name: dentate ${{ steps.v.outputs.version }}
+          body: "CLI bundles of `dentate[demo]==${{ steps.v.outputs.version }}` (PyPI). Unzip and run `dentate/dentate serve`. Source: https://pypi.org/project/dentate/${{ steps.v.outputs.version }}/"
+          fail_on_unmatched_files: true
+          files: |
+            artifacts/dentate-macos-arm64/dentate-macos-arm64.zip
+            artifacts/dentate-linux-x64/dentate-linux-x64.zip
+            artifacts/dentate-windows-x64/dentate-windows-x64.zip
