@@ -83,8 +83,11 @@ Unzip, then `./dentate/dentate demo doctor` (Windows: `dentate\dentate.exe`). Sa
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Xpitfire/dentate-bootcamp/blob/main/dentate_bootcamp.ipynb)
 
 `examples/colab/dentate_bootcamp.ipynb`: install → `dentate demo init` → run the starter with live progress → start
-`dentate serve` in the background → open it through Colab's port proxy (link + inline frame). The CPU runtime is
-enough; expect a few minutes for the starter. Everything after the install is offline. The notebook also executes
+`dentate serve` in the background → open it through Colab's port proxy. The notebook resolves the proxy hostname
+first and starts the server with `--proxy-host <that host>`, because the browser cannot reach the VM's
+`127.0.0.1:8793` and local mode answers only loopback plus explicitly admitted proxy hosts. Use the "open in a new
+tab" link to launch and publish experiments; the inline frame is a read-only preview (Colab embeds it cross-site, which
+blocks the session cookie). The CPU runtime is enough; expect a few minutes for the starter. Everything after the install is offline. The notebook also executes
 headless (`jupyter nbconvert --execute`) on plain Linux: the Colab calls are guarded, so it doubles as a smoke test.
 
 ## 3. Hosted — https://dentate.cortex.a2olabs.com
@@ -116,9 +119,10 @@ frontdoor takes `DENTATE_WORKER_URLS` (comma list of worker origins, max 64) and
 | symptom | fix |
 |---|---|
 | `dentate demo doctor` → `FAIL torch` | `pip install "dentate[demo]"` (CPU wheel: add `--index-url https://download.pytorch.org/whl/cpu` for torch first) |
-| `FAIL spiral-reason` | `pip install spiral-lm` (or `pip install git+https://github.com/Xpitfire/spiral.git`) |
+| `FAIL spiral-reason` | `pip install spiral-lm` |
 | `untrusted tokenizer … sha256 mismatch` | `dentate demo init` rewrites the pinned copy; unset a stale `DENTATE_TOKENIZER_DIR` |
 | `output directory already exists` | pass a new `--out`; results are never overwritten |
 | `status: insufficient_heldout` | the task kind's finite space is exhausted by the training pools — lower `eval_tasks` or change `kind` |
 | `status: gate_failed` | expected for cold small models: raise `sft_steps`, then look at `results.json → support` |
 | `dentate serve` refuses `--host 0.0.0.0` | by design (implicit local session); use `python -m dentate.bootcamp serve` for a network-facing site |
+| `http://127.0.0.1:8793` does not open from Colab / a remote notebook | the browser is not on the VM: run the notebook's serve cell (Colab port proxy), or start `dentate serve --proxy-host <proxy hostname>` and open the proxied URL; other hosts get `403 Local mode accepts loopback hostnames only` |
