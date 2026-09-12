@@ -73,9 +73,9 @@ store at its root, lab state under `.bootcamp/`. It binds loopback only by desig
 `python -m dentate.bootcamp serve` behind OIDC (see the README). `dentate research-serve` is the old dashboard alone.
 
 **Downloadable CLI.** No Python? The release attaches self-contained one-folder bundles:
-[macOS arm64](https://github.com/Xpitfire/dentate/releases/latest/download/dentate-macos-arm64.zip) ·
-[Linux x64](https://github.com/Xpitfire/dentate/releases/latest/download/dentate-linux-x64.zip) ·
-[Windows x64](https://github.com/Xpitfire/dentate/releases/latest/download/dentate-windows-x64.zip).
+[macOS arm64](https://github.com/Xpitfire/dentate-bootcamp/releases/latest/download/dentate-macos-arm64.zip) ·
+[Linux x64](https://github.com/Xpitfire/dentate-bootcamp/releases/latest/download/dentate-linux-x64.zip) ·
+[Windows x64](https://github.com/Xpitfire/dentate-bootcamp/releases/latest/download/dentate-windows-x64.zip).
 Unzip, then `./dentate/dentate demo doctor` (Windows: `dentate\dentate.exe`). Same commands as above.
 
 ## 2. Colab
