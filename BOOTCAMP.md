@@ -58,13 +58,43 @@ swapped tokenizer fails loudly. `DENTATE_HOME` moves the whole data root (defaul
  "architecture": {"name": "spiral-reason", "width": 64, "embedding": 32, "loops": 2},
  "training": {"kind": "arith", "seed": 42, "sft_steps": 100, "grpo_steps": 20, "batch_size": 2,
               "learning_rate": 0.001, "rl_learning_rate": 0.00001, "samples": 4, "eval_tasks": 8,
-              "max_new_tokens": 64, "temperature": 0.8, "kl_beta": 0.04}}
+              "max_new_tokens": 64, "temperature": 0.8, "kl_beta": 0.04,
+              "loss_aggregation": "token", "advantage_normalization": "mean", "clip_low": 0.2, "clip_high": 0.28,
+              "algorithm": "grpo", "gae_lambda": 0.95}}
 ```
 
 Bounds are enforced (`width ∈ {32,64,128}`, `loops 1..8`, `sft_steps 1..500`, `grpo_steps 1..100`, `kind ∈
 {arith, modular, count, parity, compare}`, …) — the same schema the hosted site accepts. Good first experiments:
 more `sft_steps` (does support appear?), more `loops` at the same width (depth without parameters), `kl_beta` 0 vs
 0.1 during GRPO, a different `kind`.
+
+### Optimiser choices
+
+The six fields after `kl_beta` reproduce the deck's optimiser content on a real run (per-token terms
+$\ell_{it}=\min(\rho_{it}A_i,\ \operatorname{clip}(\rho_{it},1-\epsilon_\ell,1+\epsilon_h)A_i)$ for GRPO):
+
+| field | values | what it selects |
+|---|---|---|
+| `loss_aggregation` | `token` (default), `response` | `token`: $J=\sum_i\sum_t \ell_{it}\,/\,\sum_i T_i$ — the mean over all *retained* completion tokens (not Dr. GRPO's fixed maximum-length denominator); `response`: $J=\frac1N\sum_i\frac1{T_i}\sum_t \ell_{it}$. The k3 KL and the entropy bonus use the same aggregation, so the switch changes token weighting, not the KL scale. |
+| `advantage_normalization` | `mean` (default), `standardized` | `mean`: $A_i=R_i-\bar R$ (rewards 1,0,1,0 → ±0.5); `standardized`: $A_i=(R_i-\bar R)/(s_R+\varepsilon)$ with the population SD (→ ≈±1). |
+| `clip_low`, `clip_high` | 0.05..0.5 | the band $1-\epsilon_\ell<\rho<1+\epsilon_h$; defaults 0.2 / 0.28 (DAPO clip-higher). |
+| `algorithm` | `grpo` (default), `sao` | see below. |
+| `gae_lambda` | 0..1 | GAE λ for `sao` only. |
+
+`sao` is a **bounded, single-process embodiment of SAO's components** (Hou et al., arXiv:2607.07508), not the paper's
+asynchronous rollout/trainer infrastructure: one rollout per prompt over `samples × batch_size` prompts (the same
+rollout budget as GRPO, with no within-prompt group barrier); the per-token log-probability of every sampled token is
+stored at generation time and the ratio $\rho_t=\exp(\log\pi_\theta(a_t\mid s_t)-\ell_t^{\rm rollout})$ is taken
+against it; a learned token-level value head (linear on the actor's final hidden state) is the baseline, trained by
+MSE to the GAE return with two critic updates per actor update; the advantage is observation-skipping GAE
+($\delta=r+\gamma V(\text{next action})-V$, $\hat A=\delta+\gamma\lambda\hat A(\text{next action})$; with no
+environment observations it is plain token-level GAE with the terminal reward); the policy term is the
+double-sided importance mask $\mathbf 1[1-\epsilon_\ell<\rho_t<1+\epsilon_h]\,\rho_t\hat A_t$ (no PPO min).
+Trajectories are consumed in completion order with an actor update every `batch_size` of them; one CPU process
+plays the rollout worker for the whole step and then the trainer, so later mini-batches are stale relative to the
+updated actor exactly as an asynchronous buffer would make them. Metrics rows add `value_loss`, `dis_mask_frac` and
+`explained_variance`; every run writes `runs/grpo/weighting.json` with the last update's per-response
+$(T_i,\ \sum_t\ell_{it},\ A_i,\ R_i)$ so both aggregations can be recomputed by hand (the notebook does).
 
 **The site locally.** `dentate serve` runs exactly the hosted application on loopback with an implicit local session:
 public pages, the Lab (project editor, experiments launched as real local CPU jobs, publish toggle, downloads,
