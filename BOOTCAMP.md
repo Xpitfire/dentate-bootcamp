@@ -1,16 +1,18 @@
 # RL bootcamp — student guide
 
-Dentate is the training module of the bootcamp: **RLVR + distillation for small models**. The demo trains a fresh
-Spiral looped transformer (a ~0.1M-parameter core, iterated) on CPU through the whole pipeline —
+Dentate is the training module of the bootcamp. It fine-tunes a small model on a verifiable task family, measures
+whether it can already produce checkable answers, and runs GRPO only when that measurement says a reward exists. The
+pipeline is architecture-agnostic; the demo trains the bundled Spiral reference model (a ~0.1M-parameter looped core)
+on CPU through every stage:
 
 ```
 project (.dentate) → SFT → measured support (pass@k sweep) → support gate → GRPO → frozen evaluation
 ```
 
-— and refuses to reinforce what the model cannot already do: if the support sweep finds no harvestable gap, the gate
-fails and GRPO does not run. That is an honest, successfully measured result (post-GRPO accuracy is *absent*, not
-zero). Reward and evaluation share one semantic verifier; the frozen evaluation set is content-disjoint from both
-training pools. You get the same result package (`result.dentate`) whichever way you run it.
+If the support sweep finds no harvestable gap, the gate fails and GRPO does not run. That is a measured result
+(post-GRPO accuracy is *absent*, not zero). Reward and evaluation share one semantic verifier; the frozen evaluation
+set is content-disjoint from both training pools. Each run ends with a held-out score and the verdict behind it, in
+the same result package (`result.dentate`) whichever way you run it.
 
 Three ways to run it, same package, same site:
 
@@ -78,7 +80,7 @@ Unzip, then `./dentate/dentate demo doctor` (Windows: `dentate\dentate.exe`). Sa
 
 ## 2. Colab
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Xpitfire/dentate/blob/main/examples/colab/dentate_bootcamp.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Xpitfire/dentate-bootcamp/blob/main/dentate_bootcamp.ipynb)
 
 `examples/colab/dentate_bootcamp.ipynb`: install → `dentate demo init` → run the starter with live progress → start
 `dentate serve` in the background → open it through Colab's port proxy (link + inline frame). The CPU runtime is
