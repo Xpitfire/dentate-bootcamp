@@ -32,7 +32,7 @@ pip install "dentate[demo]"                          # torch CPU wheels: pip ins
 dentate demo doctor                                  # torch / transformers / spiral / tokenizer / SPA — exit 1 on any failure
 dentate demo init                                    # copies the bundled starter + pinned SmolLM tokenizer to ~/.dentate/demo
 dentate demo run                                     # trains the starter → ~/.dentate/experiments/<timestamp>/
-dentate serve                                        # http://127.0.0.1:8793 — the site + your local lab
+dentate serve                                        # http://127.0.0.1:8793 — the console (your lab, no accounts)
 ```
 
 `demo run` prints one JSON line per stage and ends with the output directory. It contains:
@@ -96,11 +96,13 @@ updated actor exactly as an asynchronous buffer would make them. Metrics rows ad
 `explained_variance`; every run writes `runs/grpo/weighting.json` with the last update's per-response
 $(T_i,\ \sum_t\ell_{it},\ A_i,\ R_i)$ so both aggregations can be recomputed by hand (the notebook does).
 
-**The site locally.** `dentate serve` runs exactly the hosted application on loopback with an implicit local session:
-public pages, the Lab (project editor, experiments launched as real local CPU jobs, publish toggle, downloads,
-papers) and the owner research dashboard, all in one process. Data root `--data` (default `~/.dentate`): research
-store at its root, lab state under `.bootcamp/`. It binds loopback only by design — for a network-facing site use
-`python -m dentate.bootcamp serve` behind OIDC (see the README). `dentate research-serve` is the old dashboard alone.
+**The console.** `dentate serve` is the console for the machine it runs on, the way TensorBoard is: the Lab (project
+editor, experiments launched as real local CPU jobs, `result.dentate` import/download) and the research dashboards
+(runs, compare, sweeps, checkpoints, datasets, models, simulator, settings) over the local data root, in one process.
+There are no accounts to sign in to, no public pages and no publishing: those belong to the hosted deployment. Data
+root `--data` (default `~/.dentate`): research store at its root, lab state under `.bootcamp/`. It binds loopback by
+default — for a network-facing site use `python -m dentate.bootcamp serve` behind OIDC (see the README).
+`dentate research-serve` is the old dashboard alone.
 
 **Terminal.** `dentate serve` also embeds a terminal dock at the bottom of the lab and research pages (toggle with
 the ⌃` / ⌘` shortcut or the strip's arrow; drag its top edge to resize). It is locked until you open the URL the
@@ -129,12 +131,13 @@ Unzip, then `./dentate/dentate demo doctor` (Windows: `dentate\dentate.exe`). Sa
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Xpitfire/dentate-bootcamp/blob/main/dentate_bootcamp.ipynb)
 
-`examples/colab/dentate_bootcamp.ipynb`: install → `dentate demo init` → run the starter with live progress → start
-`dentate serve` in the background → open it through Colab's port proxy. The notebook resolves the proxy hostname
-first and starts the server with `--proxy-host <that host>`, because the browser cannot reach the VM's
-`127.0.0.1:8793` and local mode answers only loopback plus explicitly admitted proxy hosts. Use the "open in a new
-tab" link to launch and publish experiments; the site opens in its own tab (it refuses to be embedded). The CPU runtime is enough; expect a few minutes for the starter. Everything after the install is offline. The notebook also executes
-headless (`jupyter nbconvert --execute`) on plain Linux: the Colab calls are guarded, so it doubles as a smoke test.
+`examples/colab/dentate_bootcamp.ipynb`: install → `dentate demo init` → **open the console** (section 2b) → run the
+starter with live progress in that tab → inspect it. The console starts in the background and the notebook prints its
+proxied link early, because the browser cannot reach the VM's `127.0.0.1:8793`; the link carries the launch token,
+which is also what admits the proxy's rewritten `Host` (so no `--proxy-host` guesswork is required). It opens in its
+own tab — the console refuses to be embedded. The CPU runtime is enough; expect a few minutes for the starter.
+Everything after the install is offline. The notebook also executes headless (`jupyter nbconvert --execute`) on plain
+Linux: the Colab calls are guarded, so it doubles as a smoke test.
 
 ## 3. Hosted — https://dentate.cortex.a2olabs.com
 
