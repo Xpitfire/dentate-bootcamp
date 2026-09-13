@@ -136,8 +136,11 @@ Unzip, then `./dentate/dentate demo doctor` (Windows: `dentate\dentate.exe`). Sa
 
 `examples/colab/dentate_bootcamp.ipynb`: install → `dentate demo init` → **open the console** (section 2b) → run the
 starter with live progress in that tab → inspect it. The console starts in the background and the notebook prints its
-proxied link early, because the browser cannot reach the VM's `127.0.0.1:8793`; the link carries the launch token,
-which is also what admits the proxy's rewritten `Host` (so no `--proxy-host` guesswork is required). It opens in its
+proxied link early, because the browser cannot reach the VM's `127.0.0.1:8793`. Colab's port proxy rewrites `Host` to
+an internal name on its own port (`…codatalab-user-runtimes.internal:8007`), which no allowlist can predict, so a
+loopback-bound console admits reads on any `Host` and gates everything else on the launch token the printed link
+carries plus the CSRF token: the shell, and every mutation. The token persists in `<data>/.bootcamp/terminal-token`,
+so restarting the console keeps an open tab unlocked (`--rotate-token` forces a new one). It opens in its
 own tab — the console refuses to be embedded. The CPU runtime is enough; expect a few minutes for the starter.
 Everything after the install is offline. The notebook also executes headless (`jupyter nbconvert --execute`) on plain
 Linux: the Colab calls are guarded, so it doubles as a smoke test.
