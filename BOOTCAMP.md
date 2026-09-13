@@ -96,7 +96,10 @@ updated actor exactly as an asynchronous buffer would make them. Metrics rows ad
 `explained_variance`; every run writes `runs/grpo/weighting.json` with the last update's per-response
 $(T_i,\ \sum_t\ell_{it},\ A_i,\ R_i)$ so both aggregations can be recomputed by hand (the notebook does).
 
-**The console.** `dentate serve` is the console for the machine it runs on, the way TensorBoard is: the Lab (project
+**The console.** `dentate serve` is the console for the machine it runs on, the way TensorBoard is — including
+discovery: every run under the data root shows up in Runs, whether the console launched it or a shell did
+(`demo run --out <dir>` keeps a self-contained experiment directory, and the console adopts its stages as
+`<experiment>.<stage>` without moving anything). It serves: the Lab (project
 editor, experiments launched as real local CPU jobs, `result.dentate` import/download) and the research dashboards
 (runs, compare, sweeps, checkpoints, datasets, models, simulator, settings) over the local data root, in one process.
 There are no accounts to sign in to, no public pages and no publishing: those belong to the hosted deployment. Data
